@@ -39,6 +39,8 @@ async def list_exam_series(
         raise HTTPException(status_code=404, detail="Exam not found")
 
     result = await session.execute(
-        select(Series).where(Series.exam_id == exam_id).order_by(Series.code)
+        select(Series)
+        .where(Series.exam_id == exam_id, Series.is_active)
+        .order_by(Series.code)
     )
     return list(result.scalars().all())

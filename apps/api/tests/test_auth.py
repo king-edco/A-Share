@@ -10,7 +10,7 @@ from app.models import Admin
 BOOTSTRAP_EMAIL = "bootstrap-admin@example.com"
 BOOTSTRAP_PASSWORD = "test-bootstrap-password"
 
-PING = "/api/v1/admin/ping"
+NEW_EXAM_BODY = {"code": "AUTH_PROBE", "name": "Auth Probe Exam", "system": "FR"}
 
 
 async def _login(client: AsyncClient, email: str, password: str) -> dict:
@@ -53,22 +53,25 @@ async def test_me_returns_bootstrap_admin_and_scopes(client: AsyncClient) -> Non
     assert roles["super_admin"]["system_scope"] == "BOTH"
 
 
-async def test_admin_ping_without_token_returns_401(client: AsyncClient) -> None:
-    assert (await client.get(PING)).status_code == 401
+async def test_protected_write_without_token_returns_401(client: AsyncClient) -> None:
+    response = await client.post("/api/v1/admin/exams", json=NEW_EXAM_BODY)
+
+    assert response.status_code == 401
 
 
-async def test_admin_ping_with_permission_returns_200(client: AsyncClient) -> None:
+async def test_protected_write_with_permission_succeeds(client: AsyncClient) -> None:
     tokens = await _login(client, BOOTSTRAP_EMAIL, BOOTSTRAP_PASSWORD)
 
-    response = await client.get(
-        PING, headers={"Authorization": f"Bearer {tokens['access_token']}"}
+    response = await client.post(
+        "/api/v1/admin/exams",
+        json=NEW_EXAM_BODY,
+        headers={"Authorization": f"Bearer {tokens['access_token']}"},
     )
 
-    assert response.status_code == 200
-    assert response.json()["message"] == "pong"
+    assert response.status_code == 201
 
 
-async def test_admin_ping_without_permission_returns_403(
+async def test_protected_write_without_permission_returns_403(
     client: AsyncClient, session: AsyncSession
 ) -> None:
     # A second admin with no roles assigned holds no permissions at all.
@@ -77,8 +80,10 @@ async def test_admin_ping_without_permission_returns_403(
     await session.commit()
 
     tokens = await _login(client, "roleless@example.com", "pw")
-    response = await client.get(
-        PING, headers={"Authorization": f"Bearer {tokens['access_token']}"}
+    response = await client.post(
+        "/api/v1/admin/exams",
+        json=NEW_EXAM_BODY,
+        headers={"Authorization": f"Bearer {tokens['access_token']}"},
     )
 
     assert response.status_code == 403
@@ -94,10 +99,10 @@ async def test_refresh_returns_new_working_access_token(client: AsyncClient) -> 
     new_access = refreshed.json()["access_token"]
     assert new_access
 
-    ping = await client.get(
-        PING, headers={"Authorization": f"Bearer {new_access}"}
+    probe = await client.get(
+        "/api/v1/auth/me", headers={"Authorization": f"Bearer {new_access}"}
     )
-    assert ping.status_code == 200
+    assert probe.status_code == 200
 
 
 async def test_refresh_with_access_token_rejected(client: AsyncClient) -> None:

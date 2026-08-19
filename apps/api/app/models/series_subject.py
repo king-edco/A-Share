@@ -7,7 +7,7 @@ attributes (coefficient, is_compulsory) and forms a composite primary key.
 import uuid
 from decimal import Decimal
 
-from sqlalchemy import Boolean, ForeignKey, Index, Numeric, Uuid, false
+from sqlalchemy import Boolean, ForeignKey, Index, Numeric, String, Uuid, false
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base
@@ -33,3 +33,9 @@ class SeriesSubject(Base):
     is_compulsory: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default=false()
     )
+    # Subject grouping within the pool. Expected values today:
+    # "professional" / "related_professional" / "general" (TVE Advanced Level
+    # distinguishes professional and related-professional subjects). Null for
+    # exams without that distinction (Bac, GCE A Level). Deliberately no DB
+    # CHECK constraint to keep the vocabulary flexible.
+    subject_category: Mapped[str | None] = mapped_column(String(64), nullable=True)

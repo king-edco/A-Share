@@ -23,6 +23,13 @@ class Series(TimestampMixin, Base):
     code: Mapped[str] = mapped_column(String(32), nullable=False)
     label: Mapped[str] = mapped_column(String(255), nullable=False)
     stream_group: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    # is_binding marks whether this series' subject pool is a closed list
+    # (true: Bac, Probatoire, GCE A Level, TVE) or only a suggested default
+    # (false: GCE O Level groupings, where students mix freely within the
+    # exam's min/max subject rules).
+    is_binding: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default=true()
+    )
     min_subjects: Mapped[int | None] = mapped_column(Integer, nullable=True)
     max_subjects: Mapped[int | None] = mapped_column(Integer, nullable=True)
     is_active: Mapped[bool] = mapped_column(
