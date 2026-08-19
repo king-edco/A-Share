@@ -1,3 +1,6 @@
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 export default function ComingSoonPage({
   title,
   description,
@@ -7,15 +10,22 @@ export default function ComingSoonPage({
 }) {
   return (
     <div className="flex h-full items-center justify-center">
-      <div className="max-w-md rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center">
-        <span className="rounded-full bg-amber-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-500 ring-1 ring-amber-500/30">
-          Coming soon
-        </span>
-        <h1 className="mt-4 text-lg font-semibold tracking-tight text-slate-800">
-          {title}
-        </h1>
-        <p className="mt-2 text-sm text-slate-500">{description}</p>
-      </div>
+      <Card className="max-w-md border-dashed text-center">
+        <CardHeader>
+          <Badge
+            variant="outline"
+            className="mx-auto w-fit bg-amber-500/10 uppercase tracking-wide text-amber-600"
+          >
+            Coming soon
+          </Badge>
+          <CardTitle>
+            <h1>{title}</h1>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">{description}</p>
+        </CardContent>
+      </Card>
     </div>
   );
 }

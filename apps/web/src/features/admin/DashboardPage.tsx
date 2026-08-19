@@ -1,3 +1,13 @@
+import { BookOpen, ShieldCheck } from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useAuth } from "../auth/auth-context";
 
 const SCOPE_HINTS: Record<string, string> = {
@@ -12,53 +22,64 @@ export default function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 className="text-xl font-semibold tracking-tight">
-          Welcome back
-        </h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Signed in as <span className="font-medium text-slate-700">{admin.email}</span>
-        </p>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <h1>Welcome back</h1>
+          </CardTitle>
+          <CardDescription>
+            Signed in as <span className="font-medium">{admin.email}</span>
+          </CardDescription>
+        </CardHeader>
+      </Card>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-          Your roles
-        </h2>
-        <ul className="mt-4 divide-y divide-slate-100">
-          {admin.roles.map((role) => (
-            <li
-              key={role.code}
-              className="flex items-center justify-between gap-4 py-3"
-            >
-              <div>
-                <p className="text-sm font-medium text-slate-800">
-                  {role.label}
-                </p>
-                <p className="text-xs text-slate-500">{role.code}</p>
-              </div>
-              <div className="text-right">
-                <span className="rounded-full bg-sky-500/10 px-2.5 py-1 text-xs font-semibold text-sky-600 ring-1 ring-sky-500/30">
-                  {role.system_scope}
-                </span>
-                <p className="mt-1 text-xs text-slate-400">
-                  {SCOPE_HINTS[role.system_scope] ?? "Exam system scope"}
-                </p>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">
+            <h2>Your roles</h2>
+          </CardTitle>
+          <CardDescription>
+            Granted permissions and their exam-system scope
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-0">
+            {admin.roles.map((role) => (
+              <li key={role.code}>
+                <div className="flex items-center justify-between gap-4 py-3">
+                  <div>
+                    <p className="text-sm font-medium">{role.label}</p>
+                    <p className="text-xs text-muted-foreground">{role.code}</p>
+                  </div>
+                  <div className="text-right">
+                    <Badge variant="secondary">
+                      <ShieldCheck className="mr-1 h-3 w-3" />
+                      {role.system_scope}
+                    </Badge>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {SCOPE_HINTS[role.system_scope] ?? "Exam system scope"}
+                    </p>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
 
-      <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6">
-        <h2 className="text-sm font-semibold text-slate-700">
-          Content management is on its way
-        </h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Exam, series, subject, and chapter management screens will appear in
-          the sidebar soon. They are visible there today as disabled previews.
-        </p>
-      </div>
+      <Card className="border-dashed">
+        <CardHeader>
+          <CardTitle className="text-base">
+            <h2>Content management is on its way</h2>
+          </CardTitle>
+          <CardDescription className="flex items-start gap-2">
+            <BookOpen className="mt-0.5 h-4 w-4 shrink-0" />
+            Exam, series, subject, and chapter management screens will appear
+            in the sidebar soon. They are visible there today as disabled
+            previews.
+          </CardDescription>
+        </CardHeader>
+      </Card>
     </div>
   );
 }

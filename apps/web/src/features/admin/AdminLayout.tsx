@@ -1,21 +1,60 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import {
+  BookOpen,
+  GitBranch,
+  GraduationCap,
+  LayoutDashboard,
+  ListTree,
+  LogOut,
+} from "lucide-react";
 
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuBadge,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { useAuth } from "../auth/auth-context";
 
 /**
- * Protected shell for the admin area: sidebar navigation, top bar with the
- * current admin's identity (email + role/scope badges) and logout, and the
- * routed page body. Exam/Series/Subject/Chapter items are visible but
- * disabled placeholders until those management screens land.
+ * Protected shell: shadcn Sidebar (icon-collapsible, cookie-persisted) plus
+ * a top bar whose right side is an Avatar DropdownMenu carrying the admin's
+ * identity and the logout action.
  */
 
 const PLACEHOLDER_ITEMS = [
-  { to: "/admin/exams", label: "Exams" },
-  { to: "/admin/series", label: "Series" },
-  { to: "/admin/subjects", label: "Subjects" },
-  { to: "/admin/chapters", label: "Chapters" },
+  { to: "/admin/exams", label: "Exams", icon: GraduationCap },
+  { to: "/admin/series", label: "Series", icon: GitBranch },
+  { to: "/admin/subjects", label: "Subjects", icon: BookOpen },
+  { to: "/admin/chapters", label: "Chapters", icon: ListTree },
 ] as const;
+
+// The sidebar persists its state in the "sidebar_state" cookie on toggle,
+// but only reads it back server-side. In this pure SPA, seed defaultOpen
+// from that same cookie so the collapse state survives reloads.
+function initialSidebarOpen(): boolean {
+  return !document.cookie.includes("sidebar_state=false");
+}
 
 function BackendStatus() {
   const [ok, setOk] = useState<boolean | null>(null);
@@ -44,36 +83,23 @@ function BackendStatus() {
 
   if (ok === null) return null;
   return (
-    <span
+    <Badge
+      variant="secondary"
+      className="hidden items-center gap-1.5 sm:inline-flex"
       title={ok ? "Backend: ok" : "Backend: unreachable"}
-      className={`hidden items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium sm:inline-flex ${
-        ok
-          ? "bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/30"
-          : "bg-rose-500/10 text-rose-400 ring-1 ring-rose-500/30"
-      }`}
     >
       <span
-        className={`h-1.5 w-1.5 rounded-full ${ok ? "bg-emerald-400" : "bg-rose-400"}`}
+        className={`h-1.5 w-1.5 rounded-full ${ok ? "bg-emerald-500" : "bg-rose-500"}`}
       />
       {ok ? "API" : "API down"}
-    </span>
-  );
-}
-
-function RoleBadge({ code, scope }: { code: string; scope: string }) {
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-800 px-2.5 py-1 text-xs font-medium text-slate-300 ring-1 ring-slate-700">
-      {code}
-      <span className="rounded-full bg-sky-500/15 px-1.5 text-[10px] font-semibold uppercase tracking-wide text-sky-400">
-        {scope}
-      </span>
-    </span>
+    </Badge>
   );
 }
 
 export default function AdminLayout() {
   const { admin, logout } = useAuth();
   const navigate = useNavigate();
+  const initial = admin?.email.slice(0, 1).toUpperCase() ?? "?";
 
   function handleLogout() {
     logout();
@@ -82,95 +108,116 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-100 text-slate-900">
-      {/* Sidebar */}
-      <aside className="flex w-60 shrink-0 flex-col bg-slate-950 text-slate-300">
-        <div className="flex h-16 items-center gap-3 border-b border-slate-800 px-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-500/10 ring-1 ring-sky-400/30">
-            <span className="text-base font-bold text-sky-400">A</span>
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-slate-100">A-Share</p>
-            <p className="text-xs text-slate-500">Admin console</p>
-          </div>
-        </div>
-
-        <nav className="flex-1 space-y-1 px-3 py-4" aria-label="Admin sections">
-          <NavLink
-            to="/admin/dashboard"
-            className={({ isActive }) =>
-              `flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition ${
-                isActive
-                  ? "bg-sky-500/15 text-sky-400"
-                  : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-200"
-              }`
-            }
-          >
-            Dashboard
-          </NavLink>
-
-          {PLACEHOLDER_ITEMS.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                `flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition ${
-                  isActive
-                    ? "bg-slate-800/60 text-slate-200"
-                    : "text-slate-500 hover:bg-slate-800/40 hover:text-slate-300"
-                }`
-              }
-            >
-              <span className="opacity-60">{item.label}</span>
-              <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-400 ring-1 ring-amber-500/30">
-                Soon
+    <SidebarProvider defaultOpen={initialSidebarOpen()}>
+      <Sidebar collapsible="icon">
+        <SidebarHeader>
+          <div className="flex items-center gap-2.5 px-1 py-1.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-500/15">
+              <span className="text-sm font-bold text-sky-500">A</span>
+            </div>
+            <div className="flex flex-col group-data-[collapsible=icon]:hidden">
+              <span className="text-sm font-semibold">A-Share</span>
+              <span className="text-xs text-muted-foreground">
+                Admin console
               </span>
-            </NavLink>
-          ))}
-        </nav>
+            </div>
+          </div>
+        </SidebarHeader>
 
-        <div className="border-t border-slate-800 px-5 py-4 text-xs text-slate-600">
-          Exam-prep platform · Cameroon
-        </div>
-      </aside>
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Dashboard">
+                  <NavLink to="/admin/dashboard">
+                    <LayoutDashboard />
+                    <span>Dashboard</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
 
-      {/* Main column */}
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-16 items-center justify-between gap-4 border-b border-slate-200 bg-white px-6">
-          <BackendStatus />
-          <div className="ml-auto flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              {admin?.roles.map((role) => (
-                <RoleBadge
-                  key={role.code}
-                  code={role.code}
-                  scope={role.system_scope}
-                />
+              {PLACEHOLDER_ITEMS.map((item) => (
+                <SidebarMenuItem key={item.to}>
+                  <SidebarMenuButton asChild tooltip={item.label}>
+                    <NavLink to={item.to}>
+                      <item.icon />
+                      <span>{item.label}</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                  <SidebarMenuBadge>
+                    <Badge
+                      variant="outline"
+                      className="bg-amber-500/10 text-[10px] uppercase tracking-wide text-amber-600"
+                    >
+                      Soon
+                    </Badge>
+                  </SidebarMenuBadge>
+                </SidebarMenuItem>
               ))}
-            </div>
-            <div className="h-6 w-px bg-slate-200" aria-hidden="true" />
-            <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white">
-                {admin?.email.slice(0, 1).toUpperCase()}
-              </div>
-              <span className="text-sm font-medium text-slate-700">
-                {admin?.email}
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:border-slate-400 hover:text-slate-900"
-            >
-              Log out
-            </button>
+            </SidebarMenu>
+          </SidebarGroup>
+        </SidebarContent>
+
+        <SidebarFooter>
+          <p className="px-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
+            Exam-prep platform · Cameroon
+          </p>
+        </SidebarFooter>
+      </Sidebar>
+
+      <SidebarInset>
+        <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur">
+          <SidebarTrigger />
+          <BackendStatus />
+          <div className="ml-auto">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="User menu"
+                  className="rounded-full"
+                >
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-primary text-xs font-semibold text-primary-foreground">
+                      {initial}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="font-normal">
+                  <p className="text-sm font-medium">{admin?.email}</p>
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                    {admin?.roles.map((role) => (
+                      <span
+                        key={role.code}
+                        className="inline-flex items-center gap-1.5"
+                      >
+                        <Badge variant="secondary" className="text-[10px]">
+                          {role.code}
+                        </Badge>
+                        <Badge variant="outline" className="text-[10px] uppercase">
+                          {role.system_scope}
+                        </Badge>
+                      </span>
+                    ))}
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 
         <main className="flex-1 overflow-y-auto p-6">
           <Outlet />
         </main>
-      </div>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
