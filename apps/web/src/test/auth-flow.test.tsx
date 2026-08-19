@@ -143,7 +143,8 @@ describe("auth flow", () => {
   });
 
   it("logs out, clears the session, and redirects to /login", async () => {
-    const user = userEvent.setup();
+    // Radix menus intercept pointer checks in jsdom; disable the check.
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
     renderApp("/login");
 
     await user.type(await screen.findByLabelText(/email/i), ADMIN.email);
@@ -151,7 +152,9 @@ describe("auth flow", () => {
     await user.click(screen.getByRole("button", { name: /sign in/i }));
     await screen.findByRole("heading", { name: /welcome back/i });
 
-    await user.click(screen.getByRole("button", { name: /log out/i }));
+    // Logout now lives inside the avatar dropdown menu.
+    await user.click(screen.getByRole("button", { name: /user menu/i }));
+    await user.click(await screen.findByRole("menuitem", { name: /log out/i }));
 
     await waitFor(() =>
       expect(screen.getByRole("button", { name: /sign in/i })).toBeInTheDocument(),

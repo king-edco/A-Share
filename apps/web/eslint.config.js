@@ -25,4 +25,9 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    // Generated shadcn components co-locate hooks/constants with components.
+    files: ["src/components/ui/**", "src/hooks/**"],
+    rules: { "react-refresh/only-export-components": "off" },
+  },
 );
