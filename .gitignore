@@ -26,6 +26,10 @@ build/
 htmlcov/
 .mypy_cache/
 
+# Node / frontend tooling
+node_modules/
+dev-dist/
+
 # OS junk
 .DS_Store
 Thumbs.db

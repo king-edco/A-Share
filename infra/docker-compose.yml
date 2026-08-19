@@ -28,5 +28,19 @@ services:
       db:
         condition: service_healthy
 
+  web:
+    build:
+      context: ../apps/web
+      dockerfile: Dockerfile
+      args:
+        # Same-origin base path for API calls from the browser. The web
+        # container's nginx proxies /api/* to the api service, so the app
+        # works without CORS (apps/api must stay unmodified).
+        VITE_API_URL: /api
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+
 volumes:
   pgdata:
