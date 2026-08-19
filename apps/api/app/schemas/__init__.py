@@ -1,5 +1,10 @@
 """Pydantic schemas package."""
 
-from app.schemas.catalog import ExamRead, SeriesRead, SubjectInSeriesRead
+from app.schemas.catalog import (
+    ChapterRead,
+    ExamRead,
+    SeriesRead,
+    SubjectInSeriesRead,
+)
 
-__all__ = ["ExamRead", "SeriesRead", "SubjectInSeriesRead"]
+__all__ = ["ChapterRead", "ExamRead", "SeriesRead", "SubjectInSeriesRead"]

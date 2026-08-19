@@ -29,7 +29,7 @@ async def list_series_subjects(
     result = await session.execute(
         select(SeriesSubject, Subject)
         .join(Subject, SeriesSubject.subject_id == Subject.id)
-        .where(SeriesSubject.series_id == series_id)
+        .where(SeriesSubject.series_id == series_id, Subject.is_active)
         .order_by(Subject.name)
     )
     return [
@@ -38,6 +38,7 @@ async def list_series_subjects(
             name=subject.name,
             coefficient=link.coefficient,
             is_compulsory=link.is_compulsory,
+            subject_category=link.subject_category,
         )
         for link, subject in result.all()
     ]

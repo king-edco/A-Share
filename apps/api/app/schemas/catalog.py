@@ -25,6 +25,7 @@ class SeriesRead(BaseModel):
     code: str
     label: str
     stream_group: str | None
+    is_binding: bool
     min_subjects: int | None
     max_subjects: int | None
     is_active: bool
@@ -37,3 +38,16 @@ class SubjectInSeriesRead(BaseModel):
     name: str
     coefficient: Decimal | None
     is_compulsory: bool
+    subject_category: str | None
+
+
+class ChapterRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    subject_id: uuid.UUID
+    parent_chapter_id: uuid.UUID | None
+    title: str
+    order_index: int
+    syllabus_year: int | None
+    is_active: bool
