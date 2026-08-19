@@ -52,7 +52,7 @@ export default function DashboardPage() {
                     <p className="text-xs text-muted-foreground">{role.code}</p>
                   </div>
                   <div className="text-right">
-                    <Badge variant="secondary">
+                    <Badge>
                       <ShieldCheck className="mr-1 h-3 w-3" />
                       {role.system_scope}
                     </Badge>
