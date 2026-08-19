@@ -13,6 +13,8 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
+from app.models import Base
+
 # The Alembic Config object, providing access to values in alembic.ini.
 config = context.config
 
@@ -29,8 +31,8 @@ if not database_url:
     )
 config.set_main_option("sqlalchemy.url", database_url)
 
-# Will later point at the SQLAlchemy metadata of the application models.
-target_metadata = None
+# Autogenerate diffs against the metadata of all registered ORM models.
+target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:
