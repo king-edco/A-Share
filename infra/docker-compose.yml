@@ -24,6 +24,10 @@ services:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql+asyncpg://ashare_user:ashare_password@db:5432/ashare_db
+      # Development-only placeholders; see .env.example at the repo root.
+      JWT_SECRET_KEY: dev-jwt-secret-key
+      ADMIN_BOOTSTRAP_EMAIL: admin@example.com
+      ADMIN_BOOTSTRAP_PASSWORD: change-me-to-a-strong-password
     depends_on:
       db:
         condition: service_healthy

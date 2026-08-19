@@ -9,16 +9,35 @@ Seeded graph:
 - Exam GCE_AL (EN): series "Science" (parent grouping only, no direct
   subjects) and child series "S1" with compulsory subjects Pure Mathematics,
   Physics, Chemistry.
+- Permissions exam.manage / series.manage / subject.manage / chapter.manage,
+  roles super_admin and content_manager (both linked to all four
+  permissions for now), and one bootstrap admin account (credentials from
+  the ADMIN_BOOTSTRAP_EMAIL / ADMIN_BOOTSTRAP_PASSWORD environment
+  variables) holding the super_admin role with system_scope BOTH.
 """
 
 import asyncio
+import os
 from decimal import Decimal
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.security import hash_password
 from app.db.session import _get_engine
-from app.models import Exam, Series, SeriesSubject, Subject
+from app.models import (
+    Admin,
+    AdminRole,
+    Exam,
+    Permission,
+    Role,
+    RolePermission,
+    Series,
+    SeriesSubject,
+    Subject,
+)
+
+_PERMISSION_CODES = ("exam.manage", "series.manage", "subject.manage", "chapter.manage")
 
 
 async def _get_or_create_exam(
@@ -101,6 +120,82 @@ async def _link_subject(
         )
 
 
+async def _get_or_create_permission(session: AsyncSession, code: str) -> Permission:
+    permission = (
+        await session.execute(select(Permission).where(Permission.code == code))
+    ).scalar()
+
+    if permission is None:
+        permission = Permission(code=code)
+        session.add(permission)
+        await session.flush()
+    return permission
+
+
+async def _get_or_create_role(
+    session: AsyncSession, code: str, label: str
+) -> Role:
+    role = (await session.execute(select(Role).where(Role.code == code))).scalar()
+
+    if role is None:
+        role = Role(code=code, label=label)
+        session.add(role)
+        await session.flush()
+    return role
+
+
+async def _link_role_permission(
+    session: AsyncSession, role: Role, permission: Permission
+) -> None:
+    link = (
+        await session.execute(
+            select(RolePermission).where(
+                RolePermission.role_id == role.id,
+                RolePermission.permission_id == permission.id,
+            )
+        )
+    ).scalar()
+
+    if link is None:
+        session.add(RolePermission(role_id=role.id, permission_id=permission.id))
+
+
+async def _get_or_create_bootstrap_admin(
+    session: AsyncSession, roles: list[Role]
+) -> Admin:
+    email = os.environ.get("ADMIN_BOOTSTRAP_EMAIL")
+    password = os.environ.get("ADMIN_BOOTSTRAP_PASSWORD")
+    if not email or not password:
+        raise RuntimeError(
+            "ADMIN_BOOTSTRAP_EMAIL and ADMIN_BOOTSTRAP_PASSWORD must be set "
+            "to create the bootstrap admin account."
+        )
+
+    admin = (
+        await session.execute(select(Admin).where(Admin.email == email))
+    ).scalar()
+
+    if admin is None:
+        admin = Admin(email=email, password_hash=hash_password(password))
+        session.add(admin)
+        await session.flush()
+
+    for role in roles:
+        assignment = (
+            await session.execute(
+                select(AdminRole).where(
+                    AdminRole.admin_id == admin.id,
+                    AdminRole.role_id == role.id,
+                )
+            )
+        ).scalar()
+        if assignment is None:
+            session.add(
+                AdminRole(admin_id=admin.id, role_id=role.id, system_scope="BOTH")
+            )
+    return admin
+
+
 async def seed(session: AsyncSession) -> None:
     """Insert the sample dataset into the given session (idempotent)."""
     bac = await _get_or_create_exam(session, "BAC", "Baccalauréat", "FR")
@@ -124,6 +219,14 @@ async def seed(session: AsyncSession) -> None:
     for name in ("Pure Mathematics", "Physics", "Chemistry"):
         subject = await _get_or_create_subject(session, gce_al, name)
         await _link_subject(session, s1, subject, None, True)
+
+    permissions = [await _get_or_create_permission(session, code) for code in _PERMISSION_CODES]
+    super_admin = await _get_or_create_role(session, "super_admin", "Super Admin")
+    content_manager = await _get_or_create_role(session, "content_manager", "Content Manager")
+    for role in (super_admin, content_manager):
+        for permission in permissions:
+            await _link_role_permission(session, role, permission)
+    await _get_or_create_bootstrap_admin(session, [super_admin])
 
     await session.commit()
 

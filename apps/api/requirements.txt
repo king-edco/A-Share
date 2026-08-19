@@ -4,3 +4,7 @@ sqlalchemy[asyncio]>=2.0.30
 asyncpg>=0.29
 alembic>=1.13
 pydantic-settings>=2.4
+passlib>=1.7.4
+# passlib 1.7.4 is incompatible with bcrypt 4.1+'s metadata layout.
+bcrypt>=4,<4.1
+python-jose[cryptography]>=3.3

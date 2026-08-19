@@ -5,6 +5,7 @@ endpoints under test use the exact same seed routine as the standalone
 seed script.
 """
 
+import os
 from collections.abc import AsyncGenerator
 from typing import Any
 
@@ -22,6 +23,18 @@ from app.db.seed import seed
 from app.db.session import get_async_session
 from app.main import app
 from app.models import Base
+
+BOOTSTRAP_EMAIL = "bootstrap-admin@example.com"
+BOOTSTRAP_PASSWORD = "test-bootstrap-password"
+
+
+@pytest.fixture(autouse=True)
+def _auth_env() -> None:
+    """Force auth-related env vars so tests stay hermetic regardless of the
+    developer's shell; the app reads them lazily at call time."""
+    os.environ["JWT_SECRET_KEY"] = "test-jwt-secret-key"
+    os.environ["ADMIN_BOOTSTRAP_EMAIL"] = BOOTSTRAP_EMAIL
+    os.environ["ADMIN_BOOTSTRAP_PASSWORD"] = BOOTSTRAP_PASSWORD
 
 
 @pytest.fixture
