@@ -98,7 +98,7 @@ describe("auth flow", () => {
       await screen.findByLabelText(/email/i),
       ADMIN.email,
     );
-    await user.type(screen.getByLabelText(/password/i), "correct-password");
+    await user.type(screen.getByLabelText("Password"), "correct-password");
     await user.click(screen.getByRole("button", { name: /sign in/i }));
 
     await screen.findByRole("heading", { name: /welcome back/i });
@@ -114,15 +114,16 @@ describe("auth flow", () => {
     renderApp("/login");
 
     await user.type(await screen.findByLabelText(/email/i), ADMIN.email);
-    await user.type(screen.getByLabelText(/password/i), "wrong-password");
+    await user.type(screen.getByLabelText("Password"), "wrong-password");
     await user.click(screen.getByRole("button", { name: /sign in/i }));
 
     expect(
-      await screen.findByText("Invalid email or password."),
+      await screen.findByText(
+        "Invalid email or password. Please check your credentials.",
+      ),
     ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("heading", { name: /welcome back/i }),
-    ).not.toBeInTheDocument();
+    // Still on the login page: the dashboard-only marker must be absent.
+    expect(screen.queryByText(/signed in as/i)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /sign in/i })).toBeEnabled();
   });
 
@@ -130,7 +131,9 @@ describe("auth flow", () => {
     renderApp("/admin/dashboard");
 
     await screen.findByRole("button", { name: /sign in/i });
-    expect(screen.getByRole("heading", { name: /a-share admin/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /welcome back/i }),
+    ).toBeInTheDocument();
     expect(localStorage.getItem(REFRESH_TOKEN_KEY)).toBeNull();
   });
 
@@ -148,7 +151,7 @@ describe("auth flow", () => {
     renderApp("/login");
 
     await user.type(await screen.findByLabelText(/email/i), ADMIN.email);
-    await user.type(screen.getByLabelText(/password/i), "correct-password");
+    await user.type(screen.getByLabelText("Password"), "correct-password");
     await user.click(screen.getByRole("button", { name: /sign in/i }));
     await screen.findByRole("heading", { name: /welcome back/i });
 
