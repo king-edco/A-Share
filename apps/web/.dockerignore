@@ -1,0 +1,5 @@
+# Keep the image build context small and free of local artifacts.
+node_modules/
+dist/
+dev-dist/
+.env
