@@ -5,6 +5,13 @@ from app.schemas.catalog import (
     ExamRead,
     SeriesRead,
     SubjectInSeriesRead,
+    SubjectRead,
 )
 
-__all__ = ["ChapterRead", "ExamRead", "SeriesRead", "SubjectInSeriesRead"]
+__all__ = [
+    "ChapterRead",
+    "ExamRead",
+    "SeriesRead",
+    "SubjectInSeriesRead",
+    "SubjectRead",
+]

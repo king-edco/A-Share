@@ -16,6 +16,15 @@ class ExamRead(BaseModel):
     is_active: bool
 
 
+class SubjectRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    exam_id: uuid.UUID
+    name: str
+    is_active: bool
+
+
 class SeriesRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

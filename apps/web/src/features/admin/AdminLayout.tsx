@@ -28,7 +28,6 @@ import {
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
-  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
@@ -144,14 +143,6 @@ export default function AdminLayout() {
                       <span>{item.label}</span>
                     </NavLink>
                   </SidebarMenuButton>
-                  <SidebarMenuBadge>
-                    <Badge
-                      variant="outline"
-                      className="bg-amber-500/10 text-[10px] uppercase tracking-wide text-amber-600"
-                    >
-                      Soon
-                    </Badge>
-                  </SidebarMenuBadge>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
