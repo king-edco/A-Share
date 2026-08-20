@@ -1,16 +1,20 @@
+import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 
 import { Toaster } from "@/components/ui/sonner";
+import { queryClient } from "./lib/query-client";
 import { AuthProvider } from "./features/auth/AuthProvider";
 import AppRoutes from "./routes/AppRoutes";
 
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-        <Toaster />
-      </AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <AppRoutes />
+          <Toaster richColors closeButton />
+        </AuthProvider>
+      </QueryClientProvider>
     </BrowserRouter>
   );
 }
