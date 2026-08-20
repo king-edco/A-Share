@@ -1,7 +1,9 @@
 """ORM models package: re-exports the declarative base and every model."""
 
 from app.models.admin import Admin
+from app.models.admin_invitation import AdminInvitation
 from app.models.admin_role import AdminRole
+from app.models.admin_subject_grant import AdminSubjectGrant
 from app.models.base import Base
 from app.models.chapter import Chapter
 from app.models.exam import Exam
@@ -14,7 +16,9 @@ from app.models.subject import Subject
 
 __all__ = [
     "Admin",
+    "AdminInvitation",
     "AdminRole",
+    "AdminSubjectGrant",
     "Base",
     "Chapter",
     "Exam",

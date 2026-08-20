@@ -14,7 +14,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import require_permission_scoped
+from app.core.deps import require_chapter_permission_scoped, require_permission_scoped
 from app.db.session import get_async_session
 from app.models import Chapter, Exam, Series, SeriesSubject, Subject
 from app.schemas import ChapterRead, ExamRead, SeriesRead, SubjectInSeriesRead
@@ -36,7 +36,7 @@ router = APIRouter(prefix="/api/v1/admin", tags=["admin"])
 _EXAM_MANAGE = require_permission_scoped("exam.manage")
 _SERIES_MANAGE = require_permission_scoped("series.manage")
 _SUBJECT_MANAGE = require_permission_scoped("subject.manage")
-_CHAPTER_MANAGE = require_permission_scoped("chapter.manage")
+_CHAPTER_MANAGE = require_chapter_permission_scoped()
 
 
 def _apply_patch(target, data: BaseModel) -> None:

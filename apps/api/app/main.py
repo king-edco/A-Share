@@ -2,7 +2,16 @@
 
 from fastapi import FastAPI
 
-from app.api.v1.routers import admin_catalog, auth, chapters, exams, health, series
+from app.api.v1.routers import (
+    admin_accounts,
+    admin_catalog,
+    auth,
+    chapters,
+    exams,
+    health,
+    invitations,
+    series,
+)
 
 app = FastAPI(
     title="A-Share API",
@@ -16,3 +25,5 @@ app.include_router(series.router)
 app.include_router(chapters.router)
 app.include_router(auth.router)
 app.include_router(admin_catalog.router)
+app.include_router(admin_accounts.router)
+app.include_router(invitations.router)

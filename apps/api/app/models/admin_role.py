@@ -20,7 +20,10 @@ if TYPE_CHECKING:
 class AdminRole(Base):
     __tablename__ = "admin_roles"
     __table_args__ = (
-        CheckConstraint("system_scope IN ('FR', 'EN', 'BOTH')", name="ck_admin_roles_scope"),
+        CheckConstraint(
+            "system_scope IS NULL OR system_scope IN ('FR', 'EN', 'BOTH')",
+            name="ck_admin_roles_scope",
+        ),
         # The composite primary key already indexes (admin_id, role_id);
         # only role_id needs its own index for reverse lookups.
         Index("ix_admin_roles_role_id", "role_id"),
@@ -32,9 +35,8 @@ class AdminRole(Base):
     role_id: Mapped[uuid.UUID] = mapped_column(
         Uuid, ForeignKey("roles.id"), primary_key=True
     )
-    system_scope: Mapped[str] = mapped_column(
-        String(8), nullable=False, default="BOTH", server_default="BOTH"
-    )
+    # Nullable: contributor assignments scope by subject grant, not system.
+    system_scope: Mapped[str | None] = mapped_column(String(8), nullable=True)
 
     admin: Mapped["Admin"] = relationship("Admin", back_populates="admin_roles")
     role: Mapped["Role"] = relationship("Role", back_populates="admin_roles")

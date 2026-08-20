@@ -5,7 +5,9 @@ call time, so tests and local tooling can inject them without rebuilding
 the application settings.
 """
 
+import hashlib
 import os
+import secrets
 import uuid
 from datetime import UTC, datetime, timedelta
 
@@ -66,3 +68,13 @@ def decode_token(token: str, expected_type: str) -> uuid.UUID | None:
         return uuid.UUID(payload["sub"])
     except (KeyError, ValueError):
         return None
+
+
+def generate_invitation_token() -> tuple[str, str]:
+    """Return (raw_token, sha256_hex_digest).
+
+    Only the digest is ever stored; the raw token is shown to the inviter
+    exactly once and used as the invite URL secret.
+    """
+    raw = secrets.token_urlsafe(32)
+    return raw, hashlib.sha256(raw.encode("utf-8")).hexdigest()
