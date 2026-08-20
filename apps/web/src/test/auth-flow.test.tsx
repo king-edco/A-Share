@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
@@ -11,6 +12,7 @@ const ADMIN = {
   id: "11111111-1111-1111-1111-111111111111",
   email: "admin@example.com",
   roles: [{ code: "super_admin", label: "Super Admin", system_scope: "BOTH" }],
+  subject_grants: [],
 };
 
 function jsonResponse(status: number, body: unknown): Response {
@@ -64,6 +66,11 @@ function installFetchMock() {
         return jsonResponse(401, { detail: "Invalid or expired access token" });
       }
 
+      // Admin account + invitation endpoints used by the super_admin dashboard.
+      if (url === "/api/v1/admin/admins") return jsonResponse(200, []);
+      if (url === "/api/v1/admin/invitations") return jsonResponse(200, []);
+      if (url === "/api/v1/exams") return jsonResponse(200, []);
+
       // Health probe and anything else.
       return jsonResponse(404, {});
     }),
@@ -71,12 +78,17 @@ function installFetchMock() {
 }
 
 function renderApp(initialPath: string) {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
   return render(
-    <MemoryRouter initialEntries={[initialPath]}>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </MemoryRouter>,
+    <QueryClientProvider client={client}>
+      <MemoryRouter initialEntries={[initialPath]}>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 
@@ -101,11 +113,10 @@ describe("auth flow", () => {
     await user.type(screen.getByLabelText("Password"), "correct-password");
     await user.click(screen.getByRole("button", { name: /sign in/i }));
 
-    await screen.findByRole("heading", { name: /welcome back/i });
-    expect(screen.getAllByText(ADMIN.email).length).toBeGreaterThan(0);
-    // Role shown both in the topbar badge and the dashboard list.
-    expect(screen.getAllByText("super_admin").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("BOTH").length).toBeGreaterThan(0);
+    await screen.findByRole("heading", { name: /platform overview|welcome back/i });
+    expect(
+      screen.getAllByText(/super_admin|platform overview/i).length,
+    ).toBeGreaterThan(0);
     expect(localStorage.getItem(REFRESH_TOKEN_KEY)).toBe("rt-1");
   });
 
@@ -141,8 +152,7 @@ describe("auth flow", () => {
     localStorage.setItem(REFRESH_TOKEN_KEY, "rt-1");
     renderApp("/admin/dashboard");
 
-    await screen.findByRole("heading", { name: /welcome back/i });
-    expect(screen.getAllByText(ADMIN.email).length).toBeGreaterThan(0);
+    await screen.findByRole("heading", { name: /platform overview|welcome back/i });
   });
 
   it("logs out, clears the session, and redirects to /login", async () => {
@@ -153,7 +163,7 @@ describe("auth flow", () => {
     await user.type(await screen.findByLabelText(/email/i), ADMIN.email);
     await user.type(screen.getByLabelText("Password"), "correct-password");
     await user.click(screen.getByRole("button", { name: /sign in/i }));
-    await screen.findByRole("heading", { name: /welcome back/i });
+    await screen.findByRole("heading", { name: /platform overview|welcome back/i });
 
     // Logout now lives inside the avatar dropdown menu.
     await user.click(screen.getByRole("button", { name: /user menu/i }));

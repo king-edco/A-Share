@@ -8,10 +8,17 @@ export interface AdminRoleInfo {
   system_scope: string;
 }
 
+export interface AdminSubjectGrant {
+  subject_id: string;
+  subject_name: string;
+  exam_code: string;
+}
+
 export interface AdminInfo {
   id: string;
   email: string;
   roles: AdminRoleInfo[];
+  subject_grants: AdminSubjectGrant[];
 }
 
 export type AuthStatus = "loading" | "authenticated" | "unauthenticated";

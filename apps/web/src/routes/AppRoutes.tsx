@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import AdminLayout from "../features/admin/AdminLayout";
+import AdminAccountsPage from "../features/admin/accounts/AdminAccountsPage";
 import ChaptersPage from "../features/admin/chapters/ChaptersPage";
 import DashboardPage from "../features/admin/DashboardPage";
 import ExamsPage from "../features/admin/exams/ExamsPage";
@@ -25,6 +26,7 @@ export default function AppRoutes() {
       >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="accounts" element={<AdminAccountsPage />} />
         <Route path="exams" element={<ExamsPage />} />
         <Route path="series" element={<SeriesPage />} />
         <Route path="subjects" element={<SubjectsPage />} />
