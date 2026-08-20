@@ -197,7 +197,7 @@ export default function AdminLayout() {
                         <Badge variant="secondary" className="text-[10px]">
                           {role.code}
                         </Badge>
-                        <Badge variant="outline" className="text-[10px] uppercase">
+                        <Badge className="text-[10px] uppercase">
                           {role.system_scope}
                         </Badge>
                       </span>
