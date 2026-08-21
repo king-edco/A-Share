@@ -1,7 +1,20 @@
 # A-Share
 
-Monorepo for an exam-preparation web application with an admin side and a student side.
-The repository currently contains only scaffolding: the FastAPI backend skeleton and the React frontend skeleton. No business logic, data models, or authentication yet.
+Exam-preparation platform for Cameroon (Baccalauréat, Probatoire, GCE A Level, GCE O Level, TVE), with an **admin console** for content management and a **student PWA** for exam preparation.
+
+## What's built
+
+**Backend** — FastAPI (async SQLAlchemy 2.0, Alembic, PostgreSQL 16)
+- **Catalog models** — Exam (FR/EN), Series (self-referencing hierarchy, closed vs suggested subject pools), Subject, SeriesSubject (coefficient, compulsory, category), Chapter (self-referencing)
+- **Admin auth** — email + password, bcrypt hashing, JWT access (15 min) and refresh (7 days) tokens
+- **RBAC** — roles (`super_admin`, `content_manager`, `contributor`) with permissions and `system_scope` (FR / EN / BOTH) enforcement on every catalog write
+- **Invitations** — one-time hashed-token invites to create admin accounts; contributor accounts are granted access to specific subjects only via `AdminSubjectGrant`
+- **Student auth** — phone number (E.164 normalized) + self-chosen PIN, fully separate from admin tokens via an `actor_type` claim; single-shot registration with subject-pool validation
+
+**Frontend** — React 18 + TypeScript + Vite, Tailwind CSS + shadcn/ui, PWA (service worker + manifest), React Query for state, dark/light theme
+- Admin console: role-adaptive sidebar and dashboards (super_admin sees account stats, contributors see only their subjects), full CRUD for exams/series/subjects/chapters with optimistic updates, admin account management and invite dialog
+
+**Infrastructure** — Docker Compose (PostgreSQL + API + nginx-served web with an `/api` reverse proxy), GitHub Actions for API (ruff + pytest) and web (ESLint + vitest + build) on every push and PR
 
 ## Quick Start
 
@@ -42,22 +55,22 @@ The repository currently contains only scaffolding: the FastAPI backend skeleton
 ```
 apps/api/          FastAPI backend service
   app/main.py      Application entrypoint
-  app/core/        Configuration and shared utilities
-  app/models/      SQLAlchemy ORM models (empty for now)
-  app/schemas/     Pydantic schemas (empty for now)
-  app/api/v1/      HTTP endpoint routers
-  app/services/    Business logic layer (empty for now)
+  app/core/        Config, security (JWT/bcrypt), auth deps
+  app/models/      SQLAlchemy ORM models
+  app/schemas/     Pydantic request/response schemas
+  app/api/v1/      HTTP endpoint routers (auth, catalog, admin, students, invitations)
+  app/services/    Business logic (subject pool, admin safety, phone normalization)
   app/db/migrations/ Alembic migration scripts
-  tests/           Pytest test suite
-apps/web/          React 18 + TypeScript frontend (Vite + Tailwind CSS, PWA)
-  src/main.tsx     Entrypoint (registers the service worker)
-  src/App.tsx      Single status page calling the API health endpoint
-  src/features/    Feature modules (empty for now)
-  src/components/  Shared UI components (empty for now)
-  src/lib/         Utilities and helpers (empty for now)
-  src/routes/      Route definitions (empty for now)
-  public/          Web app manifest and placeholder PWA icons
-  nginx.conf       Static hosting + /api reverse proxy used by the web container
+  tests/           Pytest test suite (auth, catalog, invitations, students, admin accounts)
+apps/web/          React 18 + TypeScript frontend (Vite + Tailwind CSS + shadcn/ui, PWA)
+  src/main.tsx     Entrypoint
+  src/App.tsx      Router + providers (React Query, theme)
+  src/features/    auth, admin (dashboard, exams, series, subjects, chapters, accounts)
+  src/components/  Shared UI (EmptyState, ErrorState, TableSkeleton, ConfirmDeleteDialog, shadcn/ui)
+  src/lib/         API client, optimistic-mutation helper, query client, theme, version
+  src/routes/      Route definitions
+  public/          Web app manifest and PWA icons
+  nginx.conf       Static hosting + /api reverse proxy
 infra/             Docker Compose and infrastructure config
 specs/             OpenAPI specs and design documents
 ```
@@ -107,10 +120,15 @@ makes a cross-origin request. In the Docker Compose stack this is avoided by the
 web container's nginx proxy (`/api/*` -> `api:8000`), which is why the Compose
 build bakes in `VITE_API_URL=/api`.
 
-## Linting and Testing
+## Running Backend Tests
 
 ```bash
 cd apps/api
-ruff check .
-pytest
+python -m ruff check .
+python -m pytest
 ```
+
+The test suite covers catalog endpoints, admin auth + RBAC, invitations,
+admin accounts, and student registration/auth. It runs on an isolated
+SQLite database (no Postgres needed) and is hermetic with respect to
+environment variables.

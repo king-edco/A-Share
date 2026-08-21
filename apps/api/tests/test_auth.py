@@ -1,9 +1,14 @@
 """Tests for admin authentication and the RBAC probe endpoint."""
 
+import uuid
+from datetime import UTC, datetime, timedelta
+
 from httpx import AsyncClient
+from jose import jwt as jose_jwt
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import hash_password
+from app.core.security import create_refresh_token, hash_password
 from app.models import Admin
 
 # Mirrors the bootstrap credentials configured in conftest.py.
@@ -131,3 +136,61 @@ async def test_login_rejects_inactive_admin(
     )
 
     assert response.status_code == 401
+
+
+async def test_refresh_for_nonexistent_admin_rejected(
+    client: AsyncClient, session: AsyncSession
+) -> None:
+    bogus = await client.post(
+        "/api/v1/auth/refresh",
+        json={"refresh_token": create_refresh_token(uuid.uuid4())},
+    )
+    assert bogus.status_code == 401
+
+
+async def test_refresh_for_inactive_admin_rejected(
+    client: AsyncClient, session: AsyncSession
+) -> None:
+    tokens = await _login(client, BOOTSTRAP_EMAIL, BOOTSTRAP_PASSWORD)
+    bootstrap = (
+        await session.execute(select(Admin).where(Admin.email == BOOTSTRAP_EMAIL))
+    ).scalar()
+    bootstrap.is_active = False
+    await session.commit()
+
+    rejected = await client.post(
+        "/api/v1/auth/refresh", json={"refresh_token": tokens["refresh_token"]}
+    )
+    assert rejected.status_code == 401
+
+
+async def test_refresh_with_malformed_token_rejected(client: AsyncClient) -> None:
+    rejected = await client.post(
+        "/api/v1/auth/refresh", json={"refresh_token": "not-a-jwt"}
+    )
+    assert rejected.status_code == 401
+
+
+async def test_refresh_with_expired_token_rejected(
+    client: AsyncClient, session: AsyncSession
+) -> None:
+    bootstrap = (
+        await session.execute(select(Admin).where(Admin.email == BOOTSTRAP_EMAIL))
+    ).scalar()
+    now = datetime.now(UTC)
+    expired = jose_jwt.encode(
+        {
+            "sub": str(bootstrap.id),
+            "type": "refresh",
+            "actor_type": "admin",
+            "iat": now - timedelta(days=10),
+            "exp": now - timedelta(days=3),
+        },
+        "test-jwt-secret-key",
+        algorithm="HS256",
+    )
+
+    rejected = await client.post(
+        "/api/v1/auth/refresh", json={"refresh_token": expired}
+    )
+    assert rejected.status_code == 401

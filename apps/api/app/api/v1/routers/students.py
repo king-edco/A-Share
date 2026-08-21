@@ -109,11 +109,22 @@ async def student_login(
 
 
 @router.post("/auth/student/refresh", response_model=AccessTokenResponse)
-async def student_refresh(body: StudentRefreshRequest) -> AccessTokenResponse:
+async def student_refresh(
+    body: StudentRefreshRequest,
+    session: AsyncSession = Depends(get_async_session),
+) -> AccessTokenResponse:
+    """Exchange a valid student refresh token for a new access token.
+
+    The student must still exist and be active; deactivated or deleted
+    students lose refresh capability immediately.
+    """
     student_id, actor_type = decode_token_actor(
         body.refresh_token, expected_type="refresh"
     )
     if student_id is None or actor_type != "student":
+        raise _UNAUTHORIZED
+    student = await session.get(Student, student_id)
+    if student is None or not student.is_active:
         raise _UNAUTHORIZED
     return AccessTokenResponse(
         access_token=create_student_access_token(student_id)
