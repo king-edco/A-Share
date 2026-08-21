@@ -132,9 +132,9 @@ export default function LoginPage() {
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5" aria-hidden="true" />
-                  ) : (
                     <Eye className="h-5 w-5" aria-hidden="true" />
+                  ) : (
+                    <EyeOff className="h-5 w-5" aria-hidden="true" />
                   )}
                 </button>
               </div>
