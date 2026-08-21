@@ -36,7 +36,9 @@ import { useCreateInvitation } from "../adminAccounts";
 const inviteSchema = z
   .object({
     email: z.string().email("Enter a valid email"),
-    role_code: z.enum(["super_admin", "content_manager", "contributor"]),
+    // Inviting another super_admin is not allowed; the bootstrap super
+    // admin remains the only one by design.
+    role_code: z.enum(["content_manager", "contributor"]),
     system_scope: z.enum(["FR", "EN", "BOTH"]).optional(),
     exam_id: z.string().optional(),
     subject_id: z.string().optional(),
@@ -171,7 +173,6 @@ export function InviteDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="super_admin">Super Admin</SelectItem>
                         <SelectItem value="content_manager">Content Manager</SelectItem>
                         <SelectItem value="contributor">Contributor</SelectItem>
                       </SelectContent>

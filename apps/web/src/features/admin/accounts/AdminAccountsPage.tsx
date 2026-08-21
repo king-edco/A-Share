@@ -14,11 +14,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useAuth } from "../../auth/auth-context";
 import { useAdminsQuery, useToggleAdmin } from "../adminAccounts";
 import { InviteDialog } from "./InviteDialog";
 import { InvitationsPanel } from "./InvitationsPanel";
 
 export default function AdminAccountsPage() {
+  const { admin: currentAdmin } = useAuth();
   const adminsQuery = useAdminsQuery();
   const toggleAdmin = useToggleAdmin();
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -119,19 +121,25 @@ export default function AdminAccountsPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        toggleAdmin.mutate({
-                          id: admin.id,
-                          is_active: !admin.is_active,
-                        })
-                      }
-                      disabled={toggleAdmin.isPending}
-                    >
-                      {admin.is_active ? "Deactivate" : "Activate"}
-                    </Button>
+                    {admin.id === currentAdmin?.id ? (
+                      <span className="text-xs text-muted-foreground">
+                        You (can't deactivate)
+                      </span>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          toggleAdmin.mutate({
+                            id: admin.id,
+                            is_active: !admin.is_active,
+                          })
+                        }
+                        disabled={toggleAdmin.isPending}
+                      >
+                        {admin.is_active ? "Deactivate" : "Activate"}
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
