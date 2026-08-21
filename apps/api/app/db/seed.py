@@ -37,7 +37,13 @@ from app.models import (
     Subject,
 )
 
-_PERMISSION_CODES = ("exam.manage", "series.manage", "subject.manage", "chapter.manage")
+_PERMISSION_CODES = (
+    "exam.manage",
+    "series.manage",
+    "subject.manage",
+    "chapter.manage",
+    "admin.manage",
+)
 
 
 async def _get_or_create_exam(
@@ -220,12 +226,24 @@ async def seed(session: AsyncSession) -> None:
         subject = await _get_or_create_subject(session, gce_al, name)
         await _link_subject(session, s1, subject, None, True)
 
-    permissions = [await _get_or_create_permission(session, code) for code in _PERMISSION_CODES]
+    permissions = {
+        code: await _get_or_create_permission(session, code)
+        for code in _PERMISSION_CODES
+    }
     super_admin = await _get_or_create_role(session, "super_admin", "Super Admin")
     content_manager = await _get_or_create_role(session, "content_manager", "Content Manager")
-    for role in (super_admin, content_manager):
-        for permission in permissions:
-            await _link_role_permission(session, role, permission)
+    contributor = await _get_or_create_role(session, "contributor", "Contributor")
+
+    # super_admin: everything (including admin.manage).
+    for permission in permissions.values():
+        await _link_role_permission(session, super_admin, permission)
+    # content_manager: the catalog permissions, but NOT admin.manage.
+    for code in _PERMISSION_CODES:
+        if code != "admin.manage":
+            await _link_role_permission(session, content_manager, permissions[code])
+    # contributor: chapters only.
+    await _link_role_permission(session, contributor, permissions["chapter.manage"])
+
     await _get_or_create_bootstrap_admin(session, [super_admin])
 
     await session.commit()

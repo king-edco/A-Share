@@ -13,6 +13,7 @@ from app.db.session import get_async_session
 from app.models import (
     Admin,
     AdminRole,
+    AdminSubjectGrant,
     Chapter,
     Exam,
     Permission,
@@ -229,3 +230,94 @@ def require_permission_scoped(
         return admin
 
     return dependency
+
+
+async def _resolve_target_subject_id(
+    request: Request, session: AsyncSession
+) -> uuid.UUID | None:
+    """Resolve the subject_id a chapter write targets.
+
+    PATCH/DELETE carry chapter_id in the path (look up the chapter);
+    POST carries subject_id in the body.
+    """
+    params = request.path_params
+    chapter_uuid = None
+    try:
+        if "chapter_id" in params:
+            chapter_uuid = uuid.UUID(params["chapter_id"])
+    except (ValueError, TypeError):
+        chapter_uuid = None
+
+    if chapter_uuid is not None:
+        chapter = await session.get(Chapter, chapter_uuid)
+        if chapter is None:
+            return None
+        return chapter.subject_id
+
+    if request.method == "POST":
+        try:
+            body = await request.json()
+        except Exception:  # noqa: BLE001
+            body = None
+        if isinstance(body, dict) and "subject_id" in body:
+            try:
+                return uuid.UUID(body["subject_id"])
+            except (ValueError, TypeError):
+                return None
+    return None
+
+
+def require_chapter_permission_scoped() -> Callable[
+    [Request, Admin, AsyncSession], Awaitable[Admin]
+]:
+    """Chapter-specific permission check supporting two grant paths.
+
+    Access is granted if EITHER the admin holds a role granting
+    chapter.manage with a system_scope covering the subject's exam
+    (broad admins), OR the admin has an explicit AdminSubjectGrant for
+    the exact subject (contributors).
+    """
+
+    async def dependency(
+        request: Request,
+        admin: Admin = Depends(require_permission("chapter.manage")),
+        session: AsyncSession = Depends(get_async_session),
+    ) -> Admin:
+        subject_id = await _resolve_target_subject_id(request, session)
+        if subject_id is None:
+            # Not resolvable (e.g. chapter not found) — let the handler
+            # respond with 404/422 rather than a misleading 403.
+            return admin
+
+        # Broad path: role assignment with a covering system_scope.
+        subject = await session.get(Subject, subject_id)
+        if subject is None:
+            return admin
+        exam = await session.get(Exam, subject.exam_id)
+        if exam is not None:
+            granted = await _granted_scopes(session, admin, "chapter.manage")
+            if "BOTH" in granted or exam.system in granted:
+                return admin
+
+        # Contributor path: explicit subject grant.
+        grant = (
+            await session.execute(
+                select(AdminSubjectGrant).where(
+                    AdminSubjectGrant.admin_id == admin.id,
+                    AdminSubjectGrant.subject_id == subject_id,
+                )
+            )
+        ).scalar()
+        if grant is not None:
+            return admin
+
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                "You do not have chapter.manage access to this subject "
+                "(no covering system_scope or subject grant)."
+            ),
+        )
+
+    return dependency
+
