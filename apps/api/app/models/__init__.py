@@ -12,6 +12,8 @@ from app.models.role import Role
 from app.models.role_permission import RolePermission
 from app.models.series import Series
 from app.models.series_subject import SeriesSubject
+from app.models.student import Student
+from app.models.student_subject import StudentSubject
 from app.models.subject import Subject
 
 __all__ = [
@@ -27,5 +29,7 @@ __all__ = [
     "RolePermission",
     "Series",
     "SeriesSubject",
+    "Student",
+    "StudentSubject",
     "Subject",
 ]

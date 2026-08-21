@@ -8,7 +8,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import decode_token
+from app.core.security import decode_token_actor
 from app.db.session import get_async_session
 from app.models import (
     Admin,
@@ -19,6 +19,7 @@ from app.models import (
     Permission,
     RolePermission,
     Series,
+    Student,
     Subject,
 )
 
@@ -37,18 +38,49 @@ async def get_current_admin(
 ) -> Admin:
     """Extract the Bearer access token and load the authenticated admin.
 
-    Raises 401 when the token is missing, invalid, or expired, or when the
-    admin account no longer exists or has been deactivated.
+    Raises 401 when the token is missing, invalid, or expired, when the
+    admin account is missing/inactive, or when the token is not an admin
+    token (actor_type != "admin").
     """
     if credentials is None:
         raise _UNAUTHORIZED
-    admin_id = decode_token(credentials.credentials, expected_type="access")
+    admin_id, actor_type = decode_token_actor(
+        credentials.credentials, expected_type="access"
+    )
     if admin_id is None:
+        raise _UNAUTHORIZED
+    if actor_type != "admin":
         raise _UNAUTHORIZED
     admin = await session.get(Admin, admin_id)
     if admin is None or not admin.is_active:
         raise _UNAUTHORIZED
     return admin
+
+
+async def get_current_student(
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
+    session: AsyncSession = Depends(get_async_session),
+) -> Student:
+    """Extract the Bearer access token and load the authenticated student.
+
+    Raises 401 when the token is missing, invalid, or expired, when the
+    student account is missing/inactive, or when the token is not a
+    student token (actor_type != "student"). A student's token never
+    grants access to admin endpoints and vice versa.
+    """
+    if credentials is None:
+        raise _UNAUTHORIZED
+    student_id, actor_type = decode_token_actor(
+        credentials.credentials, expected_type="access"
+    )
+    if student_id is None:
+        raise _UNAUTHORIZED
+    if actor_type != "student":
+        raise _UNAUTHORIZED
+    student = await session.get(Student, student_id)
+    if student is None or not student.is_active:
+        raise _UNAUTHORIZED
+    return student
 
 
 def require_permission(
