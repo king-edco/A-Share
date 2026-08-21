@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import create_refresh_token, hash_password
 from app.models import Admin
+from tests.conftest import TEST_JWT_SECRET
 
 # Mirrors the bootstrap credentials configured in conftest.py.
 BOOTSTRAP_EMAIL = "bootstrap-admin@example.com"
@@ -186,7 +187,7 @@ async def test_refresh_with_expired_token_rejected(
             "iat": now - timedelta(days=10),
             "exp": now - timedelta(days=3),
         },
-        "test-jwt-secret-key",
+        TEST_JWT_SECRET,
         algorithm="HS256",
     )
 

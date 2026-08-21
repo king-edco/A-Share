@@ -26,13 +26,14 @@ from app.models import Base
 
 BOOTSTRAP_EMAIL = "bootstrap-admin@example.com"
 BOOTSTRAP_PASSWORD = "test-bootstrap-password"
+TEST_JWT_SECRET = "test-jwt-secret-key"
 
 
 @pytest.fixture(autouse=True)
 def _auth_env() -> None:
     """Force auth-related env vars so tests stay hermetic regardless of the
     developer's shell; the app reads them lazily at call time."""
-    os.environ["JWT_SECRET_KEY"] = "test-jwt-secret-key"
+    os.environ["JWT_SECRET_KEY"] = TEST_JWT_SECRET
     os.environ["ADMIN_BOOTSTRAP_EMAIL"] = BOOTSTRAP_EMAIL
     os.environ["ADMIN_BOOTSTRAP_PASSWORD"] = BOOTSTRAP_PASSWORD
 
