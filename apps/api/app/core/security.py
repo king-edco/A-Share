@@ -37,11 +37,17 @@ def _jwt_secret() -> str:
     return secret
 
 
-def _issue_token(admin_id: uuid.UUID, token_type: str, lifetime: timedelta) -> str:
+def _issue_token(
+    admin_id: uuid.UUID,
+    token_type: str,
+    lifetime: timedelta,
+    actor_type: str = "admin",
+) -> str:
     now = datetime.now(UTC)
     payload = {
         "sub": str(admin_id),
         "type": token_type,
+        "actor_type": actor_type,
         "iat": now,
         "exp": now + lifetime,
     }
@@ -56,8 +62,20 @@ def create_refresh_token(admin_id: uuid.UUID) -> str:
     return _issue_token(admin_id, "refresh", timedelta(days=REFRESH_TOKEN_DAYS))
 
 
+def create_student_access_token(student_id: uuid.UUID) -> str:
+    return _issue_token(
+        student_id, "access", timedelta(minutes=ACCESS_TOKEN_MINUTES), actor_type="student"
+    )
+
+
+def create_student_refresh_token(student_id: uuid.UUID) -> str:
+    return _issue_token(
+        student_id, "refresh", timedelta(days=REFRESH_TOKEN_DAYS), actor_type="student"
+    )
+
+
 def decode_token(token: str, expected_type: str) -> uuid.UUID | None:
-    """Return the admin id in `sub` when the token is valid, else None."""
+    """Return the subject id in `sub` when the token is valid, else None."""
     try:
         payload = jwt.decode(token, _jwt_secret(), algorithms=[_ALGORITHM])
     except JWTError:
@@ -68,6 +86,20 @@ def decode_token(token: str, expected_type: str) -> uuid.UUID | None:
         return uuid.UUID(payload["sub"])
     except (KeyError, ValueError):
         return None
+
+
+def decode_token_actor(token: str, expected_type: str) -> tuple[uuid.UUID | None, str | None]:
+    """Return (subject_id, actor_type) for a valid token, else (None, None)."""
+    try:
+        payload = jwt.decode(token, _jwt_secret(), algorithms=[_ALGORITHM])
+    except JWTError:
+        return None, None
+    if payload.get("type") != expected_type:
+        return None, None
+    try:
+        return uuid.UUID(payload["sub"]), payload.get("actor_type")
+    except (KeyError, ValueError):
+        return None, None
 
 
 def generate_invitation_token() -> tuple[str, str]:

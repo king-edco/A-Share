@@ -11,6 +11,7 @@ from app.api.v1.routers import (
     health,
     invitations,
     series,
+    students,
 )
 
 app = FastAPI(
@@ -27,3 +28,4 @@ app.include_router(auth.router)
 app.include_router(admin_catalog.router)
 app.include_router(admin_accounts.router)
 app.include_router(invitations.router)
+app.include_router(students.router)
