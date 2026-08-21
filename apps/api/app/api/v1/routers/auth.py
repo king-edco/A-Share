@@ -52,10 +52,25 @@ async def login(
 
 
 @router.post("/refresh", response_model=AccessTokenResponse)
-async def refresh(body: RefreshRequest) -> AccessTokenResponse:
-    """Exchange a valid refresh token for a new access token."""
+async def refresh(
+    body: RefreshRequest,
+    session: AsyncSession = Depends(get_async_session),
+) -> AccessTokenResponse:
+    """Exchange a valid refresh token for a new access token.
+
+    The token alone is not sufficient: the referenced admin must still
+    exist and be active, so deactivated or deleted accounts immediately
+    lose refresh capability even with an unexpired refresh token.
+
+    Refresh tokens remain otherwise stateless JWTs: there is no server-side
+    revocation list (intentionally — no Redis needed). Their lifetime is
+    short (7 days) and the account check above is the revocation mechanism.
+    """
     admin_id = decode_token(body.refresh_token, expected_type="refresh")
     if admin_id is None:
+        raise _UNAUTHORIZED
+    admin = await session.get(Admin, admin_id)
+    if admin is None or not admin.is_active:
         raise _UNAUTHORIZED
     return AccessTokenResponse(access_token=create_access_token(admin_id))
 

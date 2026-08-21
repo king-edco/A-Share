@@ -190,6 +190,94 @@ async def test_student_login_and_refresh(client: AsyncClient) -> None:
     assert refreshed.json()["access_token"]
 
 
+async def test_student_refresh_for_inactive_student_rejected(
+    client: AsyncClient, session
+) -> None:
+    exam_id, series_id = await _exam_and_series(client, "BAC")
+    subjects = (await client.get(f"/api/v1/series/{series_id}/subjects")).json()
+    response = await client.post(
+        "/api/v1/students/register",
+        json=_payload(exam_id, series_id, [s["subject_id"] for s in subjects]),
+    )
+    refresh_token = response.json()["refresh_token"]
+
+    from sqlalchemy import select
+
+    from app.models import Student
+
+    student = (
+        await session.execute(
+            select(Student).where(Student.phone_number == "+237670000000")
+        )
+    ).scalar()
+    student.is_active = False
+    await session.commit()
+
+    rejected = await client.post(
+        "/api/v1/auth/student/refresh", json={"refresh_token": refresh_token}
+    )
+    assert rejected.status_code == 401
+
+
+async def test_student_refresh_for_nonexistent_student_rejected(
+    client: AsyncClient,
+) -> None:
+    import uuid
+
+    from app.core.security import create_student_refresh_token
+
+    rejected = await client.post(
+        "/api/v1/auth/student/refresh",
+        json={"refresh_token": create_student_refresh_token(uuid.uuid4())},
+    )
+    assert rejected.status_code == 401
+
+
+async def test_student_refresh_with_malformed_token_rejected(
+    client: AsyncClient,
+) -> None:
+    rejected = await client.post(
+        "/api/v1/auth/student/refresh", json={"refresh_token": "not-a-jwt"}
+    )
+    assert rejected.status_code == 401
+
+
+async def test_admin_refresh_token_rejected_on_student_endpoint(
+    client: AsyncClient,
+) -> None:
+    await _login(client, BOOTSTRAP_EMAIL, BOOTSTRAP_PASSWORD)
+    admin_tokens = (
+        await client.post(
+            "/api/v1/auth/login",
+            json={"email": BOOTSTRAP_EMAIL, "password": BOOTSTRAP_PASSWORD},
+        )
+    ).json()
+
+    rejected = await client.post(
+        "/api/v1/auth/student/refresh",
+        json={"refresh_token": admin_tokens["refresh_token"]},
+    )
+    assert rejected.status_code == 401
+
+
+async def test_student_access_token_rejected_on_refresh_endpoint(
+    client: AsyncClient,
+) -> None:
+    exam_id, series_id = await _exam_and_series(client, "BAC")
+    subjects = (await client.get(f"/api/v1/series/{series_id}/subjects")).json()
+    response = await client.post(
+        "/api/v1/students/register",
+        json=_payload(exam_id, series_id, [s["subject_id"] for s in subjects]),
+    )
+
+    rejected = await client.post(
+        "/api/v1/auth/student/refresh",
+        json={"refresh_token": response.json()["access_token"]},
+    )
+    assert rejected.status_code == 401
+
+
+
 async def test_student_me_returns_joined_profile(client: AsyncClient) -> None:
     exam_id, series_id = await _exam_and_series(client, "BAC")
     subjects = (await client.get(f"/api/v1/series/{series_id}/subjects")).json()
