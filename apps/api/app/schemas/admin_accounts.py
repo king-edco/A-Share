@@ -9,7 +9,8 @@ from pydantic import BaseModel, ConfigDict, EmailStr
 
 class AdminRoleAssignmentRead(BaseModel):
     role_code: str
-    system_scope: str
+    # None for contributor assignments (scoped by subject grant instead).
+    system_scope: str | None
 
 
 class AdminSubjectGrantRead(BaseModel):

@@ -12,13 +12,14 @@ from app.core.security import (
     verify_password,
 )
 from app.db.session import get_async_session
-from app.models import Admin, AdminRole, Role
+from app.models import Admin, AdminRole, AdminSubjectGrant, Exam, Role, Subject
 from app.schemas.auth import (
     AccessTokenResponse,
     AdminRead,
     AdminRoleRead,
     LoginRequest,
     RefreshRequest,
+    SubjectGrantRead,
     TokenResponse,
 )
 
@@ -71,6 +72,13 @@ async def me(
         .where(AdminRole.admin_id == admin.id)
         .order_by(Role.code)
     )
+    grants_result = await session.execute(
+        select(AdminSubjectGrant, Subject, Exam)
+        .join(Subject, AdminSubjectGrant.subject_id == Subject.id)
+        .join(Exam, Subject.exam_id == Exam.id)
+        .where(AdminSubjectGrant.admin_id == admin.id)
+        .order_by(Subject.name)
+    )
     return AdminRead(
         id=admin.id,
         email=admin.email,
@@ -81,5 +89,13 @@ async def me(
                 system_scope=admin_role.system_scope,
             )
             for admin_role, role in result.all()
+        ],
+        subject_grants=[
+            SubjectGrantRead(
+                subject_id=grant.subject_id,
+                subject_name=subject.name,
+                exam_code=exam.code,
+            )
+            for grant, subject, exam in grants_result.all()
         ],
     )

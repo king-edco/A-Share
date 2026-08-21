@@ -30,7 +30,16 @@ class AdminRoleRead(BaseModel):
 
     code: str
     label: str
-    system_scope: str
+    # None for contributor assignments (scoped by subject grant instead).
+    system_scope: str | None
+
+
+class SubjectGrantRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    subject_id: uuid.UUID
+    subject_name: str
+    exam_code: str
 
 
 class AdminRead(BaseModel):
@@ -39,3 +48,4 @@ class AdminRead(BaseModel):
     id: uuid.UUID
     email: str
     roles: list[AdminRoleRead]
+    subject_grants: list[SubjectGrantRead]
