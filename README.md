@@ -13,6 +13,7 @@ Exam-preparation platform for Cameroon (Baccalauréat, Probatoire, GCE A Level, 
 
 **Frontend** — React 18 + TypeScript + Vite, Tailwind CSS + shadcn/ui, PWA (service worker + manifest), React Query for state, dark/light theme
 - Admin console: role-adaptive sidebar and dashboards (super_admin sees account stats, contributors see only their subjects), full CRUD for exams/series/subjects/chapters with optimistic updates, admin account management and invite dialog
+- Student PWA: six-step onboarding wizard (welcome → profile → exam → series → subjects → account), four-tab app shell (Accueil/Matières/Progression/Profil) with auth guard, phone + PIN sign-in, offline-capable via the service worker
 
 **Infrastructure** — Docker Compose (PostgreSQL + API + nginx-served web with an `/api` reverse proxy), GitHub Actions for API (ruff + pytest) and web (ESLint + vitest + build) on every push and PR
 
