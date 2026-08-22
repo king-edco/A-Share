@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -198,15 +198,27 @@ describe("student onboarding", () => {
     expect(screen.getByText("obligatoire")).toBeInTheDocument();
     await user.click(screen.getByText(SUBJECT.name)); // locked, no toggle
     await user.click(screen.getByRole("button", { name: /continuer/i }));
-    // Account
+    // Phone step
     await user.type(await screen.findByLabelText(/numéro de téléphone/i), "0670000000");
-    await user.type(screen.getByLabelText(/^pin/i), "1234");
+    await user.click(screen.getByRole("button", { name: /continuer/i }));
+    // Phone confirmation overlay
+    expect(
+      await screen.findByText(/ton numéro est-il correct/i),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /confirmer/i }));
+    // PIN step
+    await user.type(await screen.findByLabelText(/^pin$/i), "1234");
     await user.type(screen.getByLabelText(/confirme le pin/i), "1234");
+    await user.click(screen.getByRole("button", { name: /continuer/i }));
+    // Recap step
+    expect(await screen.findByText(/vérifie et confirme/i)).toBeInTheDocument();
+    expect(screen.queryByText(/1234/)).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /créer mon compte/i }));
 
-    await waitFor(() =>
-      expect(screen.queryByText(/créer mon compte/i)).not.toBeInTheDocument(),
-    );
+    await screen.findByText(/bonjour test/i);
+    expect(screen.queryByText(/créer mon compte/i)).not.toBeInTheDocument();
+    // PIN must be cleared from the wizard store after registration.
+    expect(useOnboardingStore.getState().data.pin).toBe("");
   });
 
   it("validation blocks continuing without full_name", async () => {
@@ -271,12 +283,15 @@ describe("student onboarding", () => {
       await screen.findByLabelText(/numéro de téléphone/i),
       "0670000000",
     );
-    await user.type(screen.getByLabelText(/^pin/i), "1234");
+    await user.click(screen.getByRole("button", { name: /continuer/i }));
+    await user.click(screen.getByRole("button", { name: /confirmer/i }));
+    await user.type(screen.getByLabelText(/^pin$/i), "1234");
     await user.type(screen.getByLabelText(/confirme le pin/i), "1234");
+    await user.click(screen.getByRole("button", { name: /continuer/i }));
     await user.click(screen.getByRole("button", { name: /créer mon compte/i }));
 
     expect(
-      await screen.findByText("This phone number is already registered."),
+      await screen.findByText("Ce numéro est déjà associé à un compte."),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /créer mon compte/i }),

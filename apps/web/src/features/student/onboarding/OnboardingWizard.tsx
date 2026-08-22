@@ -7,9 +7,11 @@ import { ProfileStep } from "./steps/ProfileStep";
 import { ExamStep } from "./steps/ExamStep";
 import { SeriesStep } from "./steps/SeriesStep";
 import { SubjectsStep } from "./steps/SubjectsStep";
-import { AccountStep } from "./steps/AccountStep";
+import { PhoneStep } from "./steps/PhoneStep";
+import { PinStep } from "./steps/PinStep";
+import { RecapStep } from "./steps/RecapStep";
 
-const STEP_COUNT = 6;
+const STEP_COUNT = 8;
 
 export default function OnboardingWizard() {
   const [step, setStep] = useState(0);
@@ -74,7 +76,9 @@ export default function OnboardingWizard() {
             {step === 2 && <ExamStep onNext={next} onBack={back} />}
             {step === 3 && <SeriesStep onNext={next} onBack={back} />}
             {step === 4 && <SubjectsStep onNext={next} onBack={back} />}
-            {step === 5 && <AccountStep onBack={back} />}
+            {step === 5 && <PhoneStep onNext={next} onBack={back} />}
+            {step === 6 && <PinStep onNext={next} onBack={back} />}
+            {step === 7 && <RecapStep onBack={back} />}
           </motion.div>
         </AnimatePresence>
       </main>
