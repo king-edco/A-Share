@@ -212,6 +212,7 @@ describe("student onboarding", () => {
     await user.click(screen.getByRole("button", { name: /continuer/i }));
     // Recap step
     expect(await screen.findByText(/vérifie et confirme/i)).toBeInTheDocument();
+    expect(screen.getByText(SUBJECT.name)).toBeInTheDocument();
     expect(screen.queryByText(/1234/)).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /créer mon compte/i }));
 

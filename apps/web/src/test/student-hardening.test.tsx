@@ -264,6 +264,11 @@ describe("student hardening", () => {
     expect(screen.getByText("Test Student")).toBeInTheDocument();
     expect(screen.getByText(EXAM.name)).toBeInTheDocument();
     expect(screen.getByText(SERIES.label)).toBeInTheDocument();
+    // Subject names are joined into the recap; assert the combined string.
+    expect(
+      screen.getAllByText((_, el) => el?.textContent?.includes(SUBJECT_B.name) ?? false)
+        .length,
+    ).toBeGreaterThan(0);
     expect(screen.getByText(/0670000000|\+237 670 00 00 00/)).toBeInTheDocument();
     expect(screen.queryByText(/1234/)).not.toBeInTheDocument();
 

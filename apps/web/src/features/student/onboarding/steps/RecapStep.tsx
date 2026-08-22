@@ -109,7 +109,7 @@ export function RecapStep({ onBack }: { onBack: () => void }) {
             Matières
           </p>
           <p className="mt-1 text-sm font-medium">
-            {data.subjectIds.join(", ") || "—"}
+            {data.subjectNames.join(", ") || "—"}
           </p>
         </div>
         <Separator />

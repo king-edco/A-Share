@@ -77,7 +77,18 @@ export function SubjectsStep({
   }
 
   function confirm() {
-    set({ subjectIds: Array.from(selected) });
+    const idName = new Map<string, string>();
+    for (const link of pool) {
+      idName.set(link.subject_id, link.name);
+    }
+    for (const subject of extras) {
+      idName.set(subject.id, subject.name);
+    }
+    const subjectIds = Array.from(selected);
+    set({
+      subjectIds,
+      subjectNames: subjectIds.map((id) => idName.get(id) ?? id),
+    });
     onNext();
   }
 

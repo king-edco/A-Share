@@ -12,6 +12,8 @@ export interface OnboardingData {
   seriesId: string | null;
   seriesLabel: string | null;
   subjectIds: string[];
+  /** Parallel display names for the recap; ids go to the backend. */
+  subjectNames: string[];
   phoneNumber: string;
   pin: string;
 }
@@ -32,6 +34,7 @@ const initial: OnboardingData = {
   seriesId: null,
   seriesLabel: null,
   subjectIds: [],
+  subjectNames: [],
   phoneNumber: "",
   pin: "",
 };
