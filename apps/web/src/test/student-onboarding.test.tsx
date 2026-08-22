@@ -175,6 +175,34 @@ describe("student onboarding", () => {
     ).toBeInTheDocument();
   });
 
+  it("an authenticated student revisiting /onboarding is sent to /", async () => {
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    renderWizard("/onboarding");
+
+    // Complete the full flow so the session exists in the wizard store.
+    await goToProfile(user);
+    await user.type(await screen.findByLabelText(/nom complet/i), "Test Student");
+    await user.click(screen.getByRole("button", { name: /continuer/i }));
+    await user.click(await screen.findByText(EXAM.name));
+    await user.click(await screen.findByText(PARENT_SERIES.code));
+    await user.click(await screen.findByText(CHILD_SERIES.code));
+    await user.click(await screen.findByText(SUBJECT.name));
+    await user.click(screen.getByRole("button", { name: /continuer/i }));
+    await user.type(await screen.findByLabelText(/numéro de téléphone/i), "0670000000");
+    await user.click(screen.getByRole("button", { name: /continuer/i }));
+    await user.click(screen.getByRole("button", { name: /confirmer/i }));
+    await user.type(await screen.findByLabelText(/^pin$/i), "1234");
+    await user.type(screen.getByLabelText(/confirme le pin/i), "1234");
+    await user.click(screen.getByRole("button", { name: /continuer/i }));
+    await user.click(screen.getByRole("button", { name: /créer mon compte/i }));
+    await screen.findByText(/bonjour test/i);
+
+    // Now revisit /onboarding while authenticated: it must redirect to /.
+    renderWizard("/onboarding");
+    expect(await screen.findByText(/bonjour test/i)).toBeInTheDocument();
+    expect(screen.queryByText(/créer mon compte/i)).not.toBeInTheDocument();
+  });
+
   it("full flow: wizard advances, series drills down, subjects are selectable, registration succeeds and navigates to /", async () => {
     const user = userEvent.setup({ pointerEventsCheck: 0 });
     renderWizard("/onboarding");

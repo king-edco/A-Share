@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Navigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { useStudentAuth } from "../auth/student-auth";
@@ -17,9 +18,9 @@ export default function OnboardingWizard() {
   const [step, setStep] = useState(0);
   const { student, status } = useStudentAuth();
 
-  // An already-authenticated student should not re-do onboarding.
+  // An authenticated student goes straight to the app shell, not onboarding.
   if (status === "authenticated" && student) {
-    return null;
+    return <Navigate to="/" replace />;
   }
 
   function next() {
