@@ -66,7 +66,7 @@ def signup_student(request: StudentSignupRequest, db: Session = Depends(get_db))
 @router.post("/login", response_model=TokenResponse)
 def login_student(request: StudentLoginRequest, db: Session = Depends(get_db)):
     student = db.query(StudentUser).filter(StudentUser.phone == request.phone).first()
-    if not student or not verify_password(request.password, student.password_hash):
+    if not student or not verify_password(request.password, student.password_hash):  # type: ignore[arg-type]
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     access_token = create_access_token(data={"sub": str(student.id)})

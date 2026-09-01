@@ -69,13 +69,13 @@ def invite_admin(
 @router.post("/register", response_model=TokenResponse)
 def register_admin(request: AdminRegisterRequest, db: Session = Depends(get_db)):
     admin = db.query(AdminUser).filter(AdminUser.invite_token == request.invite_token).first()
-    if not admin or admin.invite_status != "pending":
+    if not admin or admin.invite_status != "pending":  # type: ignore[operator]
         raise HTTPException(status_code=400, detail="Invalid or expired invite token")
 
-    admin.password_hash = get_password_hash(request.password)
-    admin.full_name = request.full_name
-    admin.invite_token = None
-    admin.invite_status = "accepted"
+    admin.password_hash = get_password_hash(request.password)  # type: ignore[assignment]
+    admin.full_name = request.full_name  # type: ignore[assignment]
+    admin.invite_token = None  # type: ignore[assignment]
+    admin.invite_status = "accepted"  # type: ignore[assignment]
     db.commit()
 
     access_token = create_access_token(data={"sub": str(admin.id), "role": admin.role})
@@ -85,9 +85,9 @@ def register_admin(request: AdminRegisterRequest, db: Session = Depends(get_db))
 @router.post("/login", response_model=TokenResponse)
 def login_admin(request: AdminLoginRequest, db: Session = Depends(get_db)):
     admin = db.query(AdminUser).filter(AdminUser.email == request.email).first()
-    if not admin or not verify_password(request.password, admin.password_hash):
+    if not admin or not verify_password(request.password, admin.password_hash):  # type: ignore[arg-type]
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    if admin.invite_status != "accepted":
+    if admin.invite_status != "accepted":  # type: ignore[operator]
         raise HTTPException(status_code=403, detail="Account not activated")
 
     access_token = create_access_token(data={"sub": str(admin.id), "role": admin.role})

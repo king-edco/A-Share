@@ -46,6 +46,7 @@ jobs:
           node-version: "20"
       - uses: pnpm/action-setup@v4
         with:
+          version: 9
           run_install: false
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
@@ -62,6 +63,7 @@ jobs:
           node-version: "20"
       - uses: pnpm/action-setup@v4
         with:
+          version: 9
           run_install: false
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
