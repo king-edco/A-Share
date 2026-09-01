@@ -15,7 +15,7 @@ Exam-revision PWA for Cameroonian exams (GCE O-Level/A-Level, Probatoire/Baccala
 
 - Docker & Docker Compose
 - Python 3.12+ (for local dev without Docker)
-- Node.js 20+ (for local dev without Docker)
+- Node.js 20+ with pnpm (for local dev without Docker)
 
 ### With Docker (recommended)
 
@@ -46,8 +46,8 @@ uvicorn app.main:app --reload
 
 # Frontend (new terminal)
 cd frontend
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
 ## Project Structure
@@ -92,8 +92,8 @@ A-Share/
 cd backend && ruff check . && ruff format .
 
 # Frontend lint
-cd frontend && npm run lint
+cd frontend && pnpm lint
 
 # Type check
-cd frontend && npm run typecheck
+cd frontend && pnpm typecheck
 ```
