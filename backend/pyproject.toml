@@ -17,5 +17,4 @@ quote-style = "double"
 pythonVersion = "3.12"
 typeCheckingMode = "basic"
 include = ["app"]
-venvPath = ".."
-venv = "venv"
+exclude = ["alembic"]
