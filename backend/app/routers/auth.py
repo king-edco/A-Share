@@ -1,20 +1,29 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.security import get_password_hash, verify_password, create_access_token, oauth2_scheme, decode_token
-from app.models.models import StudentUser, StudentSubject
+from app.core.security import (
+    create_access_token,
+    decode_token,
+    get_password_hash,
+    oauth2_scheme,
+    verify_password,
+)
+from app.models.models import StudentSubject, StudentUser
 from app.schemas.student import (
-    StudentSignupRequest,
     StudentLoginRequest,
     StudentResponse,
+    StudentSignupRequest,
     TokenResponse,
 )
 
 router = APIRouter()
 
 
-def get_current_student(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> StudentUser:
+def get_current_student(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+) -> StudentUser:
     payload = decode_token(token)
     student_id = payload.get("sub")
     if student_id is None:

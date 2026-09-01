@@ -1,6 +1,6 @@
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
+
 from pydantic import BaseModel, EmailStr
 
 
@@ -25,7 +25,7 @@ class AdminResponse(BaseModel):
     email: str
     full_name: str
     role: str
-    invite_status: Optional[str] = None
+    invite_status: str | None = None
     created_at: datetime
 
     class Config:

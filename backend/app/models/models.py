@@ -1,7 +1,7 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from sqlalchemy import Column, DateTime, ForeignKey, String, Text, Boolean, Integer, Float, JSON
+from sqlalchemy import JSON, Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -9,7 +9,7 @@ from app.core.database import Base
 
 
 def utcnow():
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class EducationSystem(Base):
@@ -25,7 +25,9 @@ class Exam(Base):
     __tablename__ = "exams"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    education_system_id = Column(UUID(as_uuid=True), ForeignKey("education_systems.id"), nullable=False)
+    education_system_id = Column(
+        UUID(as_uuid=True), ForeignKey("education_systems.id"), nullable=False
+    )
     name = Column(String(100), nullable=False)
 
     education_system = relationship("EducationSystem", back_populates="exams")
@@ -159,7 +161,9 @@ class StudentUser(Base):
     school = Column(String(200), nullable=True)
     city = Column(String(100), nullable=True)
     language_pref = Column(String(5), nullable=False)  # "fr" | "en"
-    education_system_id = Column(UUID(as_uuid=True), ForeignKey("education_systems.id"), nullable=False)
+    education_system_id = Column(
+        UUID(as_uuid=True), ForeignKey("education_systems.id"), nullable=False
+    )
     exam_id = Column(UUID(as_uuid=True), ForeignKey("exams.id"), nullable=False)
     track_id = Column(UUID(as_uuid=True), ForeignKey("tracks.id"), nullable=False)
     phone = Column(String(20), nullable=False, unique=True)

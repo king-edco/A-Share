@@ -5,15 +5,18 @@ Revises:
 Create Date: 2024-01-01 00:00:00.000000
 
 """
-from typing import Sequence, Union
-from alembic import op
+
+from collections.abc import Sequence
+
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
 
+from alembic import op
+
 revision: str = "001_initial"
-down_revision: Union[str, None] = None
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = None
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -26,7 +29,12 @@ def upgrade() -> None:
     op.create_table(
         "exams",
         sa.Column("id", UUID(as_uuid=True), primary_key=True),
-        sa.Column("education_system_id", UUID(as_uuid=True), sa.ForeignKey("education_systems.id"), nullable=False),
+        sa.Column(
+            "education_system_id",
+            UUID(as_uuid=True),
+            sa.ForeignKey("education_systems.id"),
+            nullable=False,
+        ),
         sa.Column("name", sa.String(100), nullable=False),
     )
 
@@ -102,20 +110,45 @@ def upgrade() -> None:
         sa.Column("answer_field", sa.Text, nullable=True),
         sa.Column("solution_content", sa.JSON, nullable=True),
         sa.Column("difficulty_initial", sa.Float, nullable=True),
-        sa.Column("created_by", UUID(as_uuid=True), sa.ForeignKey("admin_users.id"), nullable=False),
+        sa.Column(
+            "created_by",
+            UUID(as_uuid=True),
+            sa.ForeignKey("admin_users.id"),
+            nullable=False,
+        ),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
     )
 
     op.create_table(
         "question_concepts",
-        sa.Column("question_id", UUID(as_uuid=True), sa.ForeignKey("questions.id"), primary_key=True),
-        sa.Column("concept_id", UUID(as_uuid=True), sa.ForeignKey("concepts.id"), primary_key=True),
+        sa.Column(
+            "question_id",
+            UUID(as_uuid=True),
+            sa.ForeignKey("questions.id"),
+            primary_key=True,
+        ),
+        sa.Column(
+            "concept_id",
+            UUID(as_uuid=True),
+            sa.ForeignKey("concepts.id"),
+            primary_key=True,
+        ),
     )
 
     op.create_table(
         "contributor_subjects",
-        sa.Column("admin_user_id", UUID(as_uuid=True), sa.ForeignKey("admin_users.id"), primary_key=True),
-        sa.Column("subject_id", UUID(as_uuid=True), sa.ForeignKey("subjects.id"), primary_key=True),
+        sa.Column(
+            "admin_user_id",
+            UUID(as_uuid=True),
+            sa.ForeignKey("admin_users.id"),
+            primary_key=True,
+        ),
+        sa.Column(
+            "subject_id",
+            UUID(as_uuid=True),
+            sa.ForeignKey("subjects.id"),
+            primary_key=True,
+        ),
     )
 
     op.create_table(
@@ -125,7 +158,12 @@ def upgrade() -> None:
         sa.Column("school", sa.String(200), nullable=True),
         sa.Column("city", sa.String(100), nullable=True),
         sa.Column("language_pref", sa.String(5), nullable=False),
-        sa.Column("education_system_id", UUID(as_uuid=True), sa.ForeignKey("education_systems.id"), nullable=False),
+        sa.Column(
+            "education_system_id",
+            UUID(as_uuid=True),
+            sa.ForeignKey("education_systems.id"),
+            nullable=False,
+        ),
         sa.Column("exam_id", UUID(as_uuid=True), sa.ForeignKey("exams.id"), nullable=False),
         sa.Column("track_id", UUID(as_uuid=True), sa.ForeignKey("tracks.id"), nullable=False),
         sa.Column("phone", sa.String(20), nullable=False, unique=True),
@@ -136,14 +174,34 @@ def upgrade() -> None:
 
     op.create_table(
         "student_subjects",
-        sa.Column("student_id", UUID(as_uuid=True), sa.ForeignKey("student_users.id"), primary_key=True),
-        sa.Column("subject_id", UUID(as_uuid=True), sa.ForeignKey("subjects.id"), primary_key=True),
+        sa.Column(
+            "student_id",
+            UUID(as_uuid=True),
+            sa.ForeignKey("student_users.id"),
+            primary_key=True,
+        ),
+        sa.Column(
+            "subject_id",
+            UUID(as_uuid=True),
+            sa.ForeignKey("subjects.id"),
+            primary_key=True,
+        ),
     )
 
     op.create_table(
         "student_concept_states",
-        sa.Column("student_id", UUID(as_uuid=True), sa.ForeignKey("student_users.id"), primary_key=True),
-        sa.Column("concept_id", UUID(as_uuid=True), sa.ForeignKey("concepts.id"), primary_key=True),
+        sa.Column(
+            "student_id",
+            UUID(as_uuid=True),
+            sa.ForeignKey("student_users.id"),
+            primary_key=True,
+        ),
+        sa.Column(
+            "concept_id",
+            UUID(as_uuid=True),
+            sa.ForeignKey("concepts.id"),
+            primary_key=True,
+        ),
         sa.Column("stability", sa.Float, nullable=True),
         sa.Column("difficulty", sa.Float, nullable=True),
         sa.Column("retrievability", sa.Float, nullable=True),
@@ -156,9 +214,24 @@ def upgrade() -> None:
     op.create_table(
         "student_question_logs",
         sa.Column("id", UUID(as_uuid=True), primary_key=True),
-        sa.Column("student_id", UUID(as_uuid=True), sa.ForeignKey("student_users.id"), nullable=False),
-        sa.Column("question_id", UUID(as_uuid=True), sa.ForeignKey("questions.id"), nullable=False),
-        sa.Column("concept_id", UUID(as_uuid=True), sa.ForeignKey("concepts.id"), nullable=False),
+        sa.Column(
+            "student_id",
+            UUID(as_uuid=True),
+            sa.ForeignKey("student_users.id"),
+            nullable=False,
+        ),
+        sa.Column(
+            "question_id",
+            UUID(as_uuid=True),
+            sa.ForeignKey("questions.id"),
+            nullable=False,
+        ),
+        sa.Column(
+            "concept_id",
+            UUID(as_uuid=True),
+            sa.ForeignKey("concepts.id"),
+            nullable=False,
+        ),
         sa.Column("raw_answer", sa.Text, nullable=True),
         sa.Column("is_correct", sa.Boolean, nullable=False),
         sa.Column("ai_grading_note", sa.Text, nullable=True),
